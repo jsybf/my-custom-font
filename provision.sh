@@ -1,8 +1,7 @@
-# install git
-sudo yum install -y git
+# install git docker
+sudo yum install -y git docker > /dev/null 2>&1
 
-# install docker
-sudo yum install -y docker
+# config docker
 sudo service docker start
 sudo chmod 666 /var/run/docker.sock
 
@@ -13,6 +12,7 @@ docker build -t=fontcc .
 cd $HOME
 rm -rf mkdkimg/
 
+# build Iosevka custom font
 docker run -i --rm \
     -v $HOME/font_build:/work \
     --cpuset-cpus="0-13" \
