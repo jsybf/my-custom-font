@@ -1,0 +1,79 @@
+Description: |
+  ssm으로 연결 가능한 ec2를 생성.
+  key-pair만 required parameter
+  security group, ec2, iam policy 생성
+
+Parameters:
+  Ec2InstanceType:
+    Type: String
+    Default: c7g.4xlarge
+
+  Ec2AmiId:
+    Type: String
+    Default: ami-0771ec94d0241c207
+
+  Ec2KeyName:
+    Type: String
+    Default: foo_key_pair
+
+Resources:
+  Ec2IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  Ec2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref Ec2IAMRole
+  Ec2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow minimal access for EC2
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 # Adjust as per your requirements
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 # Adjust as per your requirements
+
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref Ec2InstanceType
+      ImageId: !Ref Ec2AmiId
+      KeyName: !Ref Ec2KeyName
+      IamInstanceProfile: !Ref Ec2InstanceProfile
+      SecurityGroupIds:
+        - !Ref Ec2SecurityGroup
+
+Outputs:
+  Ec2IAMRoleId:
+    Description: Physical ID of the EC2 IAM Role
+    Value: !Ref Ec2IAMRole
+
+  Ec2InstanceProfileId:
+    Description: Physical ID of the EC2 Instance Profile
+    Value: !Ref Ec2InstanceProfile
+
+  Ec2SecurityGroupId:
+    Description: Physical ID of the EC2 Security Group
+    Value: !Ref Ec2SecurityGroup
+
+  Ec2InstanceId:
+    Description: Physical ID of the EC2 Instance
+    Value: !Ref Ec2Instance
